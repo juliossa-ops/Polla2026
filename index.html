@@ -491,22 +491,32 @@ async function loginEnter() {
 
   const existing = STATE.participantes.find(p=>p.nombre.toLowerCase()===nombre.toLowerCase());
   if (existing) {
-    if (existing.pin && existing.pin !== pin) {
-      document.getElementById('pin-section').style.display='block';
-      document.getElementById('pin-label').textContent='PIN requerido';
-      loginMsg('PIN incorrecto'); return;
+    // Participante existente
+    if (existing.pin) {
+      // Tiene PIN — verificar
+      const pinSection = document.getElementById('pin-section');
+      if (pinSection.style.display==='none') {
+        // Mostrar campo PIN primero
+        pinSection.style.display='block';
+        document.getElementById('pin-label').textContent='Introduce tu PIN';
+        document.getElementById('btn-entrar').textContent='✅ ENTRAR';
+        loginMsg('Introduce tu PIN para continuar.');
+        return;
+      }
+      if (existing.pin !== pin) { loginMsg('PIN incorrecto'); return; }
     }
     STATE.usuario = existing;
     STATE.apuestaLocal = JSON.parse(JSON.stringify(STATE.apuestas[existing.id] || emptyApuesta()));
+    document.getElementById('login-msg').style.display='none';
     enterApp();
   } else {
     // Nuevo participante
     const pinSection = document.getElementById('pin-section');
     if (pinSection.style.display==='none') {
       pinSection.style.display='block';
-      document.getElementById('pin-label').textContent='Elige un PIN (opcional, deja vacío si no quieres)';
+      document.getElementById('pin-label').textContent='Elige un PIN (opcional, deja vacío)';
       document.getElementById('btn-entrar').textContent='✅ CONFIRMAR Y ENTRAR';
-      loginMsg('Nuevo participante. Confirma para registrarte.');
+      loginMsg('Nuevo participante — confirma para registrarte.');
       return;
     }
     showLoading(true);
@@ -560,7 +570,8 @@ function logout() {
   document.getElementById('pin-section').style.display='none';
   document.getElementById('btn-entrar').textContent='⚽ ENTRAR';
   hideAdminLogin();
-  renderLoginChips();
+  // Reload fresh data when logging out
+  loadAll().then(()=>renderLoginChips());
   showScreen('login');
 }
 
