@@ -359,14 +359,23 @@ async function jbRead() {
 }
 
 async function jbWrite(data) {
-  const r = await fetch(`${SUPA_URL}/rest/v1/Polla`, {
-    method: 'POST',
-    headers: { ...SB_HEADERS, 'Prefer': 'resolution=merge-duplicates' },
-    body: JSON.stringify({ id: ROW_ID, Data: data })
+  // Try PATCH first (update existing row), fall back to POST (insert)
+  const r = await fetch(`${SUPA_URL}/rest/v1/Polla?id=eq.${ROW_ID}`, {
+    method: 'PATCH',
+    headers: { ...SB_HEADERS, 'Prefer': 'return=minimal' },
+    body: JSON.stringify({ Data: data })
   });
   if (!r.ok) {
-    const txt = await r.text();
-    throw new Error('HTTP ' + r.status + ': ' + txt);
+    // Row doesn't exist yet — insert it
+    const r2 = await fetch(`${SUPA_URL}/rest/v1/Polla`, {
+      method: 'POST',
+      headers: { ...SB_HEADERS, 'Prefer': 'return=minimal' },
+      body: JSON.stringify({ id: ROW_ID, Data: data })
+    });
+    if (!r2.ok) {
+      const txt = await r2.text();
+      throw new Error('HTTP ' + r2.status + ': ' + txt);
+    }
   }
 }
 
@@ -391,7 +400,8 @@ async function loadAll() {
     STATE.apuestas = data.apuestas && typeof data.apuestas === 'object' ? data.apuestas : {};
     STATE.resultados = data.resultados && typeof data.resultados === 'object' ? data.resultados : defaultData().resultados;
   } catch(e) {
-    showToast('⚠️ Error cargando datos. Verifica el código de sala.', true);
+    console.error('loadAll error:', e);
+    // Use defaults silently — app still works
   }
   showLoading(false);
 }
@@ -505,7 +515,7 @@ async function loginEnter() {
     STATE.usuario = newP;
     STATE.apuestaLocal = emptyApuesta();
     STATE.apuestas[newP.id] = emptyApuesta();
-    await saveAll();
+    try { await saveAll(); } catch(e) { console.error('saveAll error:', e); }
     showLoading(false);
     enterApp();
   }
@@ -687,7 +697,6 @@ function cargarDesdeIA() {
 async function guardarApuesta() {
   const btn=document.getElementById('btn-guardar');
   btn.disabled=true; btn.textContent='⏳ GUARDANDO...';
-  // Recoger valores finales de los inputs
   STATE.apuestaLocal.final = {
     campeon: document.getElementById('f-campeon').value,
     subcampeon: document.getElementById('f-sub').value,
@@ -697,9 +706,14 @@ async function guardarApuesta() {
   STATE.apuestaLocal.goleador = [document.getElementById('gol-1').value, document.getElementById('gol-2').value, document.getElementById('gol-3').value];
   STATE.apuestaLocal.asistente = [document.getElementById('asis-1').value,'',''];
   STATE.apuestas[STATE.usuario.id] = JSON.parse(JSON.stringify(STATE.apuestaLocal));
-  await saveAll();
+  try {
+    await saveAll();
+    showToast('✅ Apuesta guardada');
+  } catch(e) {
+    console.error('Error guardando:', e);
+    showToast('⚠️ Error al guardar: ' + e.message, true);
+  }
   btn.disabled=false; btn.textContent='💾 GUARDAR APUESTA';
-  showToast('✅ Apuesta guardada');
 }
 
 // ════════════════════════════════════════════════════════════
