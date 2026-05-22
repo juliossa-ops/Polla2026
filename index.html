@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -380,15 +381,9 @@ function defaultData() {
   };
 }
 
-async function initBins() {
-  // ¿Ya tenemos BIN_ID guardado?
-  const saved = localStorage.getItem(LS_KEY);
-  if (saved) { BIN_ID = saved; return; }
-  // Si no, mostramos pantalla de "crear o unirse"
-}
+// initBins removed — Supabase is always available
 
 async function loadAll() {
-  if (!BIN_ID) return;
   showLoading(true);
   try {
     const data = await jbRead();
@@ -402,7 +397,6 @@ async function loadAll() {
 }
 
 async function saveAll() {
-  if (!BIN_ID) return;
   await jbWrite({
     participantes: STATE.participantes,
     apuestas: STATE.apuestas,
