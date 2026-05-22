@@ -39,7 +39,7 @@ input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-
 .toast.show{transform:translateY(0);opacity:1}
 .spinner{display:inline-block;width:20px;height:20px;border:3px solid rgba(255,255,255,.2);border-top-color:var(--amarillo);border-radius:50%;animation:spin .7s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
-.screen{display:none}.screen.active{display:block}
+.screen{display:none}.screen.active{display:flex;flex-direction:column}
 .overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:888;display:none;align-items:center;justify-content:center;padding:16px}
 .overlay.open{display:flex}
 </style>
@@ -47,7 +47,7 @@ input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-
 <body>
 
 <!-- ═══════════════════════════════════════ PANTALLA LOGIN ═══ -->
-<div id="screen-login" class="screen active" style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(135deg,#0f1923,#1B2838,#0f1923);padding:16px">
+<div id="screen-login" class="screen active" style="min-height:100vh;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(135deg,#0f1923,#1B2838,#0f1923);padding:16px">
   <div style="text-align:center;margin-bottom:32px">
     <div style="font-size:2.5rem;letter-spacing:10px;margin-bottom:6px">⚽🏆⚽</div>
     <div class="bebas gold" style="font-size:clamp(2.5rem,10vw,5rem);letter-spacing:4px;text-shadow:3px 3px 0 #D32F2F,6px 6px 0 rgba(0,0,0,.4);line-height:1">La Polla <span style="color:#fff">Mundialista</span></div>
@@ -81,7 +81,7 @@ input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-
 </div>
 
 <!-- ═══════════════════════════════════════ APP PRINCIPAL ═══ -->
-<div id="screen-app" class="screen">
+<div id="screen-app" class="screen" style="flex-direction:column">
   <!-- HEADER -->
   <div style="background:linear-gradient(135deg,#D32F2F 0%,#B71C1C 30%,#0f1923 60%,#1B5E20 100%);border-bottom:4px solid #FFD600;padding:18px 14px 14px;text-align:center;position:relative;overflow:hidden">
     <div style="position:absolute;inset:0;background:repeating-linear-gradient(45deg,transparent,transparent 20px,rgba(255,214,0,.03) 20px,rgba(255,214,0,.03) 40px)"></div>
@@ -465,8 +465,13 @@ function showToast(msg, err=false) {
 }
 
 function showScreen(id) {
-  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
-  document.getElementById('screen-'+id).classList.add('active');
+  document.querySelectorAll('.screen').forEach(s=>{
+    s.classList.remove('active');
+    s.style.display = 'none';
+  });
+  const el = document.getElementById('screen-'+id);
+  el.classList.add('active');
+  el.style.display = id === 'app' ? 'block' : 'flex';
 }
 
 function showTab(id, btn) {
